@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Test Auth Server</title>
+</head>
+
+<body>
+    <style>
+        #container {
+            max-width: 500px;
+        }
+
+        h4 {
+            margin-top: 25px;
+        }
+    </style>
+
+
+    <main id="container">
+        <h1>OAuth2 Test</h1>
+        <h4><b>Step 1:</b> Get the Auth URL</h4>
+        <p>Click the button below to get your auth url.</p>
+        <button id="getAuthUrlButton">Get OAuth URL</button>
+        <p id="result"></p>
+        <a id="authURL" href target="_blank">Click to authorize</a>
+
+        <h4>Step 2: Get your code and exchange for an access token</h4>
+        <p>
+            After you’re redirected back to your Meet app on GitHub, copy the code
+            from the URI.
+        </p>
+        <br />
+        <label>Code input
+            <input id="code" type="text" value="" />
+        </label>
+        <button id="getToken">Get Token</button>
+        <p id="accessToken"></p>
+    </main>
+
+    <script type="text/javascript">
+        const getAuthUrlButton = document.getElementById("getAuthUrlButton");
+        const resultElement = document.getElementById("result");
+        const resultLink = document.getElementById("authURL");
+        // Replace this with your own endpoint
+        const getAuthURL = " https://tygdu05v41.execute-api.eu-central-1.amazonaws.com/dev/api/get-auth-url"; // this is the endpoint, and as specified 
+        // in the serverless.yml file, when this endpoint is hit, the getAuthURL function employed on the cloud, is invoked.
+
+        // This procedure happens in order to hit the endpoint that invokes the getAuthURL() function, and then because fetch() returns an object,
+        // work with this object to finally get the URL as a string.
+        getAuthUrlButton.onclick = function () {
+            fetch(getAuthURL)  // invokes the getAuthURL gunction
+                .then(function (response) {  // the response object where body: ReadableStream.
+                    return response.json(); // converts the response object to json. 
+                    // {authUrl: 'https://accounts.google.com/o/oauth2/v2/auth?acces…ri=https%3A%2F%2Fkostasrafael.github.io%2Fmeet%2F'}   
+                })
+                .then(function (json) {
+                    const result = JSON.stringify(json);  // converts the json to a string
+                    // we get the value of authUrl
+                    const { authUrl } = JSON.parse(result); // converts the json to a string
+                    // then add it to the html. Here, we finally have the url string alone.
+                    resultElement.innerText = result;
+                    resultLink.href = authUrl; // Here, we pass the url string as a href value to the link.
+                });
+        };
+
+        const codeValue = document.getElementById("code");
+        const getAccessToken = document.getElementById("getToken");
+        const accessTokenElement = document.getElementById("accessToken");
+        const getToken =
+            "https://tygdu05v41.execute-api.eu-central-1.amazonaws.com/dev/api/token";
+
+        getAccessToken.onclick = function () {
+            let code = codeValue.value;
+
+            // if the authorization code is not URL-encoded, then URL-encode it.
+            if (decodeURIComponent(code) === code) {
+                code = encodeURIComponent(codeValue.value);
+            }
+            const getTokenRequest = getToken + "/" + code;
+            fetch(getTokenRequest)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (json) {
+                    accessTokenElement.innerText = JSON.stringify(json);
+                });
+        };   
+    </script>
+    </main>
+
+</body>
+
+</html>
